@@ -51,21 +51,6 @@ public class GUI extends JFrame implements KeyListener {
 
     }
 
-    /**
-     * Общая обертка для конкретных исполнителей задач
-     */
-    /*private class pressButton implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            String command = e.getActionCommand();
-            if (command.equals("Start")) {
-                currentActiveCode.set(1);
-            }
-            if (command.equals("Stop")) {
-                currentActiveCode.set(0);
-            }
-        }
-    }*/
     public static void imitateKeyPress(Robot robot, int keycode) {
         robot.keyPress(keycode);
         robot.delay(rand.nextInt(100));
@@ -81,10 +66,9 @@ public class GUI extends JFrame implements KeyListener {
     private void createAndShowGUI() {
         instance.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         instance.setLayout(new FlowLayout());
-
-
+        instance.setFont(new Font("Arial", Font.PLAIN, 16));
         //Display the window.
-        instance.setSize(170, 220);
+        instance.setSize(240, 220);
         instance.setVisible(true);
         instance.setAlwaysOnTop(true);
         instance.setLocation(0, 488);
@@ -96,22 +80,25 @@ public class GUI extends JFrame implements KeyListener {
     private JPanel CreateComponentsToPane() {
         JPanel panel = new JPanel();
         buttonStart = new JButton("Start");
+        buttonStart.setFont(instance.getFont());
         buttonStart.setLocation(10,20);
-        buttonStart.setPreferredSize(new Dimension(150, 40));
+        buttonStart.setPreferredSize(new Dimension(200, 50));
         buttonStart.addActionListener((e) -> {
             startAllTimers();
         });
         panel.add(buttonStart);
 
         buttonStop = new JButton("Stop");
+        buttonStop.setFont(instance.getFont());
         buttonStop.setLocation(10,70);
-        buttonStop.setPreferredSize(new Dimension(150, 40));
+        buttonStop.setPreferredSize(new Dimension(200, 50));
         buttonStop.addActionListener((e) -> {
             stopAllTimers();
         });
         panel.add(buttonStop);
 
         displayArea = new JTextArea(3,7);
+        displayArea.setFont(instance.getFont());
 //        displayArea.setLineWrap(true);
 //        displayArea = new JScrollPane(displayArea);
         displayArea.setLocation(10,120);
@@ -199,11 +186,12 @@ public class GUI extends JFrame implements KeyListener {
                     robot.keyPress(KeyEvent.VK_Q);
                     robot.delay(rand.nextInt(250));
                     robot.keyRelease(KeyEvent.VK_Q);
+                    displayArea.append("\nИдет бой");
                 } else if (healthColor.getRed() > 60
                         && healthColor.getRed() < 75
                         && healthColor.getBlue() < 30
                         && healthColor.getGreen() < 30) {
-                    System.out.println("Пьем банку");
+                    displayArea.append("\nПьем банку");
                     imitateKeyPress(robot, KeyEvent.VK_2);
                     imitateKeyPress(robot, KeyEvent.VK_5);
                     imitateKeyPress(robot, KeyEvent.VK_6);
@@ -219,7 +207,7 @@ public class GUI extends JFrame implements KeyListener {
                 if (!manaColor.equals(new Color(0, 79, 156))) {
                     imitateKeyPress(robot, KeyEvent.VK_3);
                     imitateKeyPress(robot, KeyEvent.VK_4);
-                    System.out.println("Пьем ману");
+                    displayArea.append("\nПьем ману");
                 }
 
                 /* Анализируем завершенность боя
@@ -251,7 +239,7 @@ public class GUI extends JFrame implements KeyListener {
 
                 displayArea.setText(displayArea.getText().split("\n")[0]
                         + "\n"
-                        + robot.getPixelColor(300, 233).toString());
+                        + robot.getPixelColor(431, 378).toString());
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
