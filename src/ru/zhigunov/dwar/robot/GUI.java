@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class GUI extends JFrame implements KeyListener {
-
     static final String newline = System.getProperty("line.separator");
+    static final Logger log = new Logger();
     static Random rand = new Random();
     private static ArrayList<Timer> timesLists = new ArrayList<>();
     private static Timer timerQ;
@@ -19,11 +19,22 @@ public class GUI extends JFrame implements KeyListener {
     private static Timer timerAnalyzerHPAndMana;
     private static Timer timerColorTester;
     private static GUI instance;
-    JTextArea displayArea;
-    JScrollPane displayAreaPane;
+    JScrollPane logTextAreaPane;
     JTextField typingArea;
-    JButton buttonStart;
-    JButton buttonStop;
+
+    private JButton startButton;
+    private JButton stopButton;
+    private JTextArea logTextArea;
+    private JPanel mainPanel;
+
+    /* переменные положения пикселей, которые мы будем анализировать во время боя */
+    int xHP = 370;
+    int yHP = 291;
+    int xMana = 370;
+    int yMana = 308;
+    int xFinishBattle = 538;
+    int yFinishBattle = 472;
+
 
 
     public GUI(String name) throws Exception {
@@ -31,7 +42,7 @@ public class GUI extends JFrame implements KeyListener {
         instance = this;
         createAndShowGUI();
         try {
-            UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
+//            UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -39,17 +50,15 @@ public class GUI extends JFrame implements KeyListener {
 
         addKeyListener(this);
         timerQ = new Timer(100, new TaskQ());
-
         timerAnalyzerHPAndMana = new Timer(500, new TaskAnalyzerHPAndMana());
-
-        timerColorTester = new Timer(2000, new TaskColorTester());
+        timerColorTester = new Timer(3000, new TaskColorTester());
 
         timesLists.add(timerQ);
         timesLists.add(timerAnalyzerHPAndMana);
-        timesLists.add(timerColorTester);
+//        timesLists.add(timerColorTester);
         startAllTimers();
-
     }
+
 
     public static void imitateKeyPress(Robot robot, int keycode) {
         robot.keyPress(keycode);
@@ -58,13 +67,8 @@ public class GUI extends JFrame implements KeyListener {
         robot.delay(rand.nextInt(100));
     }
 
-    /**
-     * Create the GUI and show it.  For thread safety,
-     * this method should be invoked from the
-     * event-dispatching thread.
-     */
     private void createAndShowGUI() {
-        instance.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        instance.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         instance.setLayout(new FlowLayout());
         instance.setFont(new Font("Arial", Font.PLAIN, 16));
         //Display the window.
@@ -74,53 +78,39 @@ public class GUI extends JFrame implements KeyListener {
         instance.setLocation(0, 488);
 
         //Set up the content pane.34
-        instance.setContentPane(CreateComponentsToPane());
+        createUIComponents();
+        instance.setContentPane(mainPanel);
     }
 
-    private JPanel CreateComponentsToPane() {
-        JPanel panel = new JPanel();
-        buttonStart = new JButton("Start");
-        buttonStart.setFont(instance.getFont());
-        buttonStart.setLocation(10,20);
-        buttonStart.setPreferredSize(new Dimension(200, 50));
-        buttonStart.addActionListener((e) -> {
-            startAllTimers();
-        });
-        panel.add(buttonStart);
+    private void createUIComponents() {
+        startButton.setFont(instance.getFont());
+        startButton.setLocation(10, 20);
+        startButton.setPreferredSize(new Dimension(200, 50));
+        startButton.addActionListener((e) -> startAllTimers());
 
-        buttonStop = new JButton("Stop");
-        buttonStop.setFont(instance.getFont());
-        buttonStop.setLocation(10,70);
-        buttonStop.setPreferredSize(new Dimension(200, 50));
-        buttonStop.addActionListener((e) -> {
-            stopAllTimers();
-        });
-        panel.add(buttonStop);
+        stopButton.setFont(instance.getFont());
+        stopButton.setLocation(10, 70);
+        stopButton.setPreferredSize(new Dimension(200, 50));
+        stopButton.addActionListener((e) -> stopAllTimers());
 
-        displayArea = new JTextArea(3,7);
-        displayArea.setFont(instance.getFont());
-//        displayArea.setLineWrap(true);
-//        displayArea = new JScrollPane(displayArea);
-        displayArea.setLocation(10,120);
-        displayArea.setSize(new Dimension(150, 40));
-        displayArea.setVisible(true);
-        panel.add(displayArea);
+        logTextArea.setFont(instance.getFont());
+//        logTextArea.setLocation(10,120);
+//        logTextArea.setSize(new Dimension(150, 40));
+//        logTextArea.setVisible(true);
 
-        return panel;
     }
-
 
 
     public void startAllTimers() {
         timesLists.forEach(Timer::start);
-        displayArea.setText("Идет бой");
+        logTextArea.setText("Идет бой");
     }
 
     public void stopAllTimers() {
         timesLists.stream()
                 .filter(timer -> timer != timerColorTester)
                 .forEach(Timer::stop);
-        displayArea.setText("Выключено");
+        logTextArea.setText("Выключено");
     }
 
     @Override
@@ -143,10 +133,16 @@ public class GUI extends JFrame implements KeyListener {
     }
     public void finishBattle(String text) {
         stopAllTimers();
-        displayArea.setText(text);
+        logTextArea.setText(text);
         instance.toFront();
     }
 
+    /**
+     * Калибровка положения экрана
+     */
+    public void calibrate() {
+
+    }
 
     /**
      * нажатие на кнопку Q
@@ -181,17 +177,17 @@ public class GUI extends JFrame implements KeyListener {
                 потраченное хп    r=54,g=7,b=8
                 */
                 timerQ.stop();
-                Color healthColor = robot.getPixelColor(300, 233);
+                Color healthColor = robot.getPixelColor(xHP, yHP);
                 if (healthColor.equals(new Color(156, 0, 0))) {
                     robot.keyPress(KeyEvent.VK_Q);
                     robot.delay(rand.nextInt(250));
                     robot.keyRelease(KeyEvent.VK_Q);
-                    displayArea.append("\nИдет бой");
-                } else if (healthColor.getRed() > 60
-                        && healthColor.getRed() < 75
+                    log.info(logTextArea, "\nИдет бой");
+
+                } else if (healthColor.getRed() > 60 && healthColor.getRed() < 75
                         && healthColor.getBlue() < 30
                         && healthColor.getGreen() < 30) {
-                    displayArea.append("\nПьем банку");
+                    log.info(logTextArea, "\nПьем банку");
                     imitateKeyPress(robot, KeyEvent.VK_2);
                     imitateKeyPress(robot, KeyEvent.VK_5);
                     imitateKeyPress(robot, KeyEvent.VK_6);
@@ -202,12 +198,12 @@ public class GUI extends JFrame implements KeyListener {
                 x = 305, y = 247
                 java.awt.Color[r=0,g=79,b=156]
                 */
-                Color manaColor = robot.getPixelColor(300, 247);
-                System.out.println(manaColor.equals(new Color(0, 79, 156)));
+                Color manaColor = robot.getPixelColor(xMana, yMana);
+                testPixelColor(xMana, yMana, robot, "Анализируем состояние (завершенность) боя: ");
                 if (!manaColor.equals(new Color(0, 79, 156))) {
                     imitateKeyPress(robot, KeyEvent.VK_3);
                     imitateKeyPress(robot, KeyEvent.VK_4);
-                    displayArea.append("\nПьем ману");
+                    log.info(logTextArea, "\nПьем ману");
                 }
 
                 /* Анализируем завершенность боя
@@ -215,8 +211,8 @@ public class GUI extends JFrame implements KeyListener {
                 в состоянии боя r=132,g=0,b=0
                 после завпршения боя r=54,g=7,b=8
                 */
-                Color finishColor = robot.getPixelColor(431, 378);
-                System.out.println(finishColor.equals(new Color(125, 189, 0)));
+                Color finishColor = robot.getPixelColor(xFinishBattle, yFinishBattle);
+                testPixelColor(xFinishBattle, yFinishBattle, robot, "Анализируем состояние (завершенность) боя: ");
                 if (finishColor.equals(new Color(125, 189, 0))) {
                     finishBattle();
                 }
@@ -233,11 +229,14 @@ public class GUI extends JFrame implements KeyListener {
                 Robot robot = new Robot();
                 int x = MouseInfo.getPointerInfo().getLocation().x;
                 int y = MouseInfo.getPointerInfo().getLocation().y;
-                System.out.println("x = " + x);
-                System.out.println("y = " + y);
-                System.out.println(robot.getPixelColor(x, y));
+                testPixelColor(x, y, robot, "Цвет указанной точки мыши ");
 
-                displayArea.setText(displayArea.getText().split("\n")[0]
+
+                testPixelColor(xHP, yHP, robot, "Цвет банок ХП");
+                testPixelColor(xMana, yMana, robot, "Цвет маны");
+                testPixelColor(xFinishBattle, yFinishBattle, robot, "Цвет завершенности боя");
+
+                logTextArea.setText(logTextArea.getText().split("\n")[0]
                         + "\n"
                         + robot.getPixelColor(431, 378).toString());
             } catch (Exception ex) {
@@ -245,6 +244,59 @@ public class GUI extends JFrame implements KeyListener {
             }
         }
     }
+
+    /**
+     * Тестирует цвет указанной точки и выводит его на экран
+     *
+     * @param x
+     * @param y
+     * @param robot
+     * @return
+     */
+    private Color testPixelColor(int x, int y, Robot robot, String prefix) {
+        Color color = robot.getPixelColor(x, y);
+        log.info(logTextArea, prefix + "x = " + x + ", y = " + y);
+        log.info(logTextArea, "Цвет указанной точки " + robot.getPixelColor(x, y));
+
+        return color;
+    }
+
+
+    /**
+     * логирование в консоль и в textarea
+     */
+    public static class Logger {
+        public Logger() {
+        }
+
+        void info(Object logTextArea, String message) {
+            System.out.println(message);
+            try {
+                ((JTextArea) logTextArea).append(message + System.lineSeparator());
+            } catch (Exception ex) {
+            }
+        }
+
+        void error(Object logTextArea, String message) {
+            System.err.println(message);
+            try {
+                ((JTextArea) logTextArea).append(message);
+            } catch (Exception ex) {
+            }
+        }
+
+        void error(Object logTextArea, String message, Throwable e) {
+            System.err.println(message);
+            System.err.println(e.getMessage());
+            try {
+                ((JTextArea) logTextArea).append(message);
+                ((JTextArea) logTextArea).append(e.getMessage());
+            } catch (Exception ex) {
+                System.err.println(ex.getMessage());
+            }
+        }
+    }
+
 
 
 }

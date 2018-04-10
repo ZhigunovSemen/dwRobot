@@ -7,19 +7,17 @@ public class Main {
 
     private static void findMaxLCString(List<String> list) {
         Optional<String> s = list.stream()
-                .max((o1, o2) -> {
-                    return (int) o1.chars().filter(intValue -> (intValue >= 97) && (intValue <= 122))
-                            .count()
-                            -
-                            (int) o2.chars().filter(intValue -> (intValue >= 97) && (intValue <= 122))
-                                    .count();
-                });
+                .max((o1, o2) -> (int) o1.chars().filter(intValue -> (intValue >= 97) && (intValue <= 122))
+                        .count()
+                        -
+                        (int) o2.chars().filter(intValue -> (intValue >= 97) && (intValue <= 122))
+                                .count());
         System.out.println(s);
     }
 
 
     public static void main(String[] args) throws Exception {
-        GUI gui = new GUI("MyGUI");
+        GUI GUIcore = new GUI("robot");
 
 //        int[] s = new int[10000000];
 //        int[] ss = new int[10000000];
