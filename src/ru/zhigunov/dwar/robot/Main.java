@@ -1,6 +1,8 @@
 package ru.zhigunov.dwar.robot;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Stream;
 
 public class Main {

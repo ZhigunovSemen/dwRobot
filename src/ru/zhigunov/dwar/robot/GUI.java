@@ -1,11 +1,15 @@
 package ru.zhigunov.dwar.robot;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -55,7 +59,7 @@ public class GUI extends JFrame implements KeyListener {
 
         timesLists.add(timerQ);
         timesLists.add(timerAnalyzerHPAndMana);
-//        timesLists.add(timerColorTester);
+        timesLists.add(timerColorTester);
         startAllTimers();
     }
 
@@ -141,6 +145,12 @@ public class GUI extends JFrame implements KeyListener {
      * Калибровка положения экрана
      */
     public void calibrate() {
+        BufferedImage img = null;
+        try {
+            img = ImageIO.read(new File("sample.bmp"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -197,13 +207,20 @@ public class GUI extends JFrame implements KeyListener {
                 /* Анализируем ману
                 x = 305, y = 247
                 java.awt.Color[r=0,g=79,b=156]
+                java.awt.Color[r=1,g=28,b=71]
                 */
                 Color manaColor = robot.getPixelColor(xMana, yMana);
                 testPixelColor(xMana, yMana, robot, "Анализируем состояние (завершенность) боя: ");
-                if (!manaColor.equals(new Color(0, 79, 156))) {
+                if (manaColor.getRed() < 10 &&
+                        manaColor.getGreen() > 20 && manaColor.getGreen() < 30 &&
+                        manaColor.getBlue() > 65 && manaColor.getBlue() < 75) {
+
                     imitateKeyPress(robot, KeyEvent.VK_3);
                     imitateKeyPress(robot, KeyEvent.VK_4);
                     log.info(logTextArea, "\nПьем ману");
+
+                } else if (!manaColor.equals(new Color(0, 79, 156))) {
+
                 }
 
                 /* Анализируем завершенность боя
@@ -232,9 +249,9 @@ public class GUI extends JFrame implements KeyListener {
                 testPixelColor(x, y, robot, "Цвет указанной точки мыши ");
 
 
-                testPixelColor(xHP, yHP, robot, "Цвет банок ХП");
+//                testPixelColor(xHP, yHP, robot, "Цвет банок ХП");
                 testPixelColor(xMana, yMana, robot, "Цвет маны");
-                testPixelColor(xFinishBattle, yFinishBattle, robot, "Цвет завершенности боя");
+//                testPixelColor(xFinishBattle, yFinishBattle, robot, "Цвет завершенности боя");
 
                 logTextArea.setText(logTextArea.getText().split("\n")[0]
                         + "\n"
@@ -296,7 +313,4 @@ public class GUI extends JFrame implements KeyListener {
             }
         }
     }
-
-
-
 }
