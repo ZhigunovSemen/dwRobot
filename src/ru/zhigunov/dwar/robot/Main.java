@@ -19,6 +19,7 @@ public class Main {
 
 
     public static void main(String[] args) throws Exception {
+        Class.forName("ru.zhigunov.dwar.robot.Calibrator", true, ClassLoader.getSystemClassLoader());
         GUI GUIcore = new GUI("robot");
 
 //        int[] s = new int[10000000];

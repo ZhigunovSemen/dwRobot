@@ -17,27 +17,30 @@ public class GUI extends JFrame implements KeyListener {
     static final String newline = System.getProperty("line.separator");
     static final Logger log = new Logger();
     static Random rand = new Random();
-    private static ArrayList<Timer> timesLists = new ArrayList<>();
+    private static ArrayList<Timer> timersLists = new ArrayList<>();
     private static Timer timerQ;
     private static Timer timer123456;
     private static Timer timerAnalyzerHPAndMana;
     private static Timer timerColorTester;
     private static GUI instance;
-    JScrollPane logTextAreaPane;
-    JTextField typingArea;
+    private static boolean needPressKey2 = false;
 
     private JButton startButton;
     private JButton stopButton;
     private JTextArea logTextArea;
     private JPanel mainPanel;
+    private JButton calibrateButton;
+    private JCheckBox press2CheckBox;
 
-    /* переменные положения пикселей, которые мы будем анализировать во время боя */
-    int xHP = 370;
-    int yHP = 291;
-    int xMana = 370;
-    int yMana = 308;
-    int xFinishBattle = 538;
-    int yFinishBattle = 472;
+    /* положения пикселей, на которые мы будем опираться при анализе боя */
+    public static int xBase = 0; // положение X шкалы ХП
+    public static int yBase = 0; // положение Y шкалы ХП
+    public static int xHP = 370;
+    public static int yHP = 291;
+    public static int xMana = xHP;
+    public static int yMana = yHP + 17;
+    public static int xFinishBattle = 538;
+    public static int yFinishBattle = 472;
 
 
 
@@ -57,10 +60,11 @@ public class GUI extends JFrame implements KeyListener {
         timerAnalyzerHPAndMana = new Timer(500, new TaskAnalyzerHPAndMana());
         timerColorTester = new Timer(3000, new TaskColorTester());
 
-        timesLists.add(timerQ);
-        timesLists.add(timerAnalyzerHPAndMana);
-        timesLists.add(timerColorTester);
-        startAllTimers();
+        timersLists.add(timerQ);
+        timersLists.add(timerAnalyzerHPAndMana);
+//        timesLists.add(timerColorTester);
+//        startAllTimers();
+
     }
 
 
@@ -81,7 +85,7 @@ public class GUI extends JFrame implements KeyListener {
         instance.setAlwaysOnTop(true);
         instance.setLocation(0, 488);
 
-        //Set up the content pane.34
+        //Set up the content pane.
         createUIComponents();
         instance.setContentPane(mainPanel);
     }
@@ -97,21 +101,25 @@ public class GUI extends JFrame implements KeyListener {
         stopButton.setPreferredSize(new Dimension(200, 50));
         stopButton.addActionListener((e) -> stopAllTimers());
 
+        calibrateButton.setFont(instance.getFont());
+        calibrateButton.addActionListener((e) -> calibrate());
+
+        press2CheckBox.addChangeListener(e -> {
+            needPressKey2 = press2CheckBox.isSelected();
+        });
+
         logTextArea.setFont(instance.getFont());
-//        logTextArea.setLocation(10,120);
-//        logTextArea.setSize(new Dimension(150, 40));
-//        logTextArea.setVisible(true);
 
     }
 
 
     public void startAllTimers() {
-        timesLists.forEach(Timer::start);
+        timersLists.forEach(Timer::start);
         logTextArea.setText("Идет бой");
     }
 
     public void stopAllTimers() {
-        timesLists.stream()
+        timersLists.stream()
                 .filter(timer -> timer != timerColorTester)
                 .forEach(Timer::stop);
         logTextArea.setText("Выключено");
@@ -142,16 +150,25 @@ public class GUI extends JFrame implements KeyListener {
     }
 
     /**
-     * Калибровка положения экрана
+     * Калибровка положения экрана. При режиме "на весь экран" положение квадрата sample.bmp Должно совпадать с квадратом 273, 244
      */
     public void calibrate() {
-        BufferedImage img = null;
         try {
-            img = ImageIO.read(new File("sample.bmp"));
-        } catch (IOException e) {
-            e.printStackTrace();
+            stopAllTimers();
+            Point point = Calibrator.Calibrate();
+            xBase = point.x;
+            yBase = point.y;
+            log.info(logTextArea, "Успешно откалибровано: x=" + xBase + " y=" + yBase);
+            xHP = xBase + 97;
+            yHP = yBase + 47;
+            xMana = xHP;
+            yMana = yHP + 17;
+            xFinishBattle = xBase + 265;
+            yFinishBattle = yBase + 228;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            log.info(logTextArea, ex.getMessage());
         }
-
     }
 
     /**
@@ -182,16 +199,17 @@ public class GUI extends JFrame implements KeyListener {
             try {
                 Robot robot = new Robot();
                 /* Анализируем ХП
-                x = 300, y = 233
                 активное ХП       r=156,g=0,b=0
                 потраченное хп    r=54,g=7,b=8
                 */
                 timerQ.stop();
                 Color healthColor = robot.getPixelColor(xHP, yHP);
-                if (healthColor.equals(new Color(156, 0, 0))) {
-                    robot.keyPress(KeyEvent.VK_Q);
-                    robot.delay(rand.nextInt(250));
-                    robot.keyRelease(KeyEvent.VK_Q);
+                if (healthColor.getRed() > 150 && healthColor.getRed() < 160
+                        && healthColor.getBlue() == 0
+                        && healthColor.getGreen() == 0) {
+
+                    if (needPressKey2) imitateKeyPress(robot, KeyEvent.VK_2);
+                    imitateKeyPress(robot, KeyEvent.VK_Q);
                     log.info(logTextArea, "\nИдет бой");
 
                 } else if (healthColor.getRed() > 60 && healthColor.getRed() < 75
@@ -205,9 +223,8 @@ public class GUI extends JFrame implements KeyListener {
                 }
 
                 /* Анализируем ману
-                x = 305, y = 247
-                java.awt.Color[r=0,g=79,b=156]
-                java.awt.Color[r=1,g=28,b=71]
+                мана есть java.awt.Color[r=0,g=79,b=156]
+                маны нет java.awt.Color[r=1,g=28,b=71]
                 */
                 Color manaColor = robot.getPixelColor(xMana, yMana);
                 testPixelColor(xMana, yMana, robot, "Анализируем состояние (завершенность) боя: ");
@@ -248,7 +265,6 @@ public class GUI extends JFrame implements KeyListener {
                 int y = MouseInfo.getPointerInfo().getLocation().y;
                 testPixelColor(x, y, robot, "Цвет указанной точки мыши ");
 
-
 //                testPixelColor(xHP, yHP, robot, "Цвет банок ХП");
                 testPixelColor(xMana, yMana, robot, "Цвет маны");
 //                testPixelColor(xFinishBattle, yFinishBattle, robot, "Цвет завершенности боя");
@@ -264,7 +280,6 @@ public class GUI extends JFrame implements KeyListener {
 
     /**
      * Тестирует цвет указанной точки и выводит его на экран
-     *
      * @param x
      * @param y
      * @param robot
