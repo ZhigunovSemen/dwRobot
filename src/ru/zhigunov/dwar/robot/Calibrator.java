@@ -18,7 +18,7 @@ public class Calibrator {
     public static Color samplePoint2;
     public static Color samplePoint3;
     public static Color samplePoint4;
-    public static int deviationPercent = 10;
+    public static int deviationPercent = 15;
 
     public static void loadSample() {
         GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
@@ -58,10 +58,10 @@ public class Calibrator {
                     Color testPoint3 = new Color(screenRectangle.getRGB(x, y + calibrateImageHeight-1));
                     Color testPoint4 = new Color(screenRectangle.getRGB(x + calibrateImageWidth-1, y + calibrateImageHeight-1));
 
-                    if (   pointRGBEqualsWithDeviation(testPoint1, samplePoint1, deviationPercent)
-                        && pointRGBEqualsWithDeviation(testPoint2, samplePoint2, deviationPercent)
-                        && pointRGBEqualsWithDeviation(testPoint3, samplePoint3, deviationPercent)
-                        && pointRGBEqualsWithDeviation(testPoint4, samplePoint4, deviationPercent)) {
+                    if (pointRGBEqualsWithDeviation(testPoint1, samplePoint1, 5)
+                            && pointRGBEqualsWithDeviation(testPoint2, samplePoint2, 5)
+                            && pointRGBEqualsWithDeviation(testPoint3, samplePoint3, 5)
+                            && pointRGBEqualsWithDeviation(testPoint4, samplePoint4, 5)) {
 
                         BufferedImage testImage2 = robot.createScreenCapture(new Rectangle(x,y,
                                 calibrateImageWidth,

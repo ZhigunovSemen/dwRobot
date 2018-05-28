@@ -60,7 +60,7 @@ public class GUI extends JFrame implements KeyListener {
         timerAnalyzerHPAndMana = new Timer(500, new TaskAnalyzerHPAndMana());
         timerColorTester = new Timer(3000, new TaskColorTester());
 
-        timersLists.add(timerQ);
+//        timersLists.add(timerQ);
         timersLists.add(timerAnalyzerHPAndMana);
 //        timesLists.add(timerColorTester);
 //        startAllTimers();
@@ -202,7 +202,7 @@ public class GUI extends JFrame implements KeyListener {
                 активное ХП       r=156,g=0,b=0
                 потраченное хп    r=54,g=7,b=8
                 */
-                timerQ.stop();
+//                timerQ.stop();
                 Color healthColor = robot.getPixelColor(xHP, yHP);
                 if (healthColor.getRed() > 150 && healthColor.getRed() < 160
                         && healthColor.getBlue() == 0
@@ -242,12 +242,14 @@ public class GUI extends JFrame implements KeyListener {
 
                 /* Анализируем завершенность боя
                 x = 431, y = 378
-                в состоянии боя r=132,g=0,b=0
-                после завпршения боя r=54,g=7,b=8
+                в состоянии боя ?
+                после завпршения боя r=125,g=189,b=0
                 */
                 Color finishColor = robot.getPixelColor(xFinishBattle, yFinishBattle);
                 testPixelColor(xFinishBattle, yFinishBattle, robot, "Анализируем состояние (завершенность) боя: ");
-                if (finishColor.equals(new Color(125, 189, 0))) {
+                if (finishColor.getRed() > 120 && finishColor.getRed() < 130 &&
+                        finishColor.getGreen() > 185 && finishColor.getGreen() < 195 &&
+                        finishColor.getBlue() == 0) {
                     finishBattle();
                 }
             } catch (Exception ex) {
